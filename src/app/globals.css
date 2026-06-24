@@ -130,7 +130,9 @@ body {
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Respecteer gebruikersvoorkeur voor minder beweging (a11y) */
+/* Respecteer gebruikersvoorkeur voor minder beweging (a11y).
+   De doorlopende marquees blijven bewust draaien — ze zijn puur decoratief
+   en horen bij de merkbeleving; alleen de in-/uit-transities worden beperkt. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -138,12 +140,7 @@ body {
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
-  }
-  .animate-marquee {
-    animation: none !important;
   }
 }
