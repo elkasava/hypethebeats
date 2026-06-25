@@ -1,12 +1,34 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Reveal from "./Reveal";
 
-const organizations = ["Gemeente", "School", "Zorginstelling", "Jongerenorganisatie", "Anders"];
+const organizations = [
+  "Particulier",
+  "Gemeente",
+  "School",
+  "Zorginstelling",
+  "Jongerenorganisatie",
+  "Anders",
+];
 
 export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [orgType, setOrgType] = useState("");
+
+  // Wanneer iemand via de particulier-knop komt (#particulier), selecteren we
+  // automatisch "Particulier" en scrollen we naar het formulier.
+  useEffect(() => {
+    const apply = () => {
+      if (window.location.hash === "#particulier") {
+        setOrgType("Particulier");
+        document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, []);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -112,17 +134,18 @@ export default function ContactForm() {
 
                   <div>
                     <label className="mb-2 block text-sm text-muted" htmlFor="organization-type">
-                      Type organisatie
+                      Ik meld me aan als
                     </label>
                     <select
                       id="organization-type"
                       name="organizationType"
                       required
-                      defaultValue=""
+                      value={orgType}
+                      onChange={(e) => setOrgType(e.target.value)}
                       className="w-full appearance-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-accent"
                     >
                       <option value="" disabled>
-                        Kies een type organisatie
+                        Maak een keuze
                       </option>
                       {organizations.map((o) => (
                         <option key={o} value={o}>
@@ -133,11 +156,10 @@ export default function ContactForm() {
                   </div>
 
                   <Field
-                    label="Organisatienaam"
+                    label="Organisatie (indien van toepassing)"
                     name="organization"
                     type="text"
-                    required
-                    placeholder="Naam van uw organisatie"
+                    placeholder="Naam van uw organisatie — particulieren mogen dit leeg laten"
                   />
 
                   <div>

@@ -21,7 +21,7 @@ export default function Hero() {
               className="mb-7 inline-flex items-center gap-2.5 rounded-md border border-accent-2/30 bg-accent-2/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-accent-2"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-accent-2" />
-              Voor gemeenten, scholen &amp; zorginstellingen
+              Voor gemeenten, scholen, zorg &amp; particulieren
             </motion.div>
 
             {/* Headline */}
