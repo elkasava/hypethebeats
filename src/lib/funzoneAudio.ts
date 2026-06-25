@@ -52,6 +52,11 @@ const kits: Record<Kit, KitParams> = {
   },
 };
 
+export function getMaster(): AudioNode | null {
+  getCtx();
+  return master;
+}
+
 export function setKit(kit: Kit) {
   currentKit = kit;
 }

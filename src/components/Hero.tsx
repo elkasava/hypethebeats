@@ -113,9 +113,9 @@ export default function Hero() {
               <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
             </div>
 
-            {/* Particulier-knop bovenaan de blob — buiten de overflow zodat hij niet wordt afgesneden — met subtiele parallax */}
+            {/* Particulier-knop onderaan de blob — buiten de overflow zodat hij niet wordt afgesneden — met subtiele parallax */}
             <div
-              className="absolute left-1/2 top-3 z-20"
+              className="absolute bottom-3 left-1/2 z-20"
               style={{ transform: `translateX(-50%) translateY(${offset}px)`, transition: "transform 0.1s linear" }}
             >
               <a

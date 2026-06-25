@@ -101,8 +101,9 @@ export default function Sequencer({ genre }: { genre: Kit }) {
       const step = stepRef.current;
       const time = nextNoteTimeRef.current;
       const secondsPer16th = (60 / bpmRef.current) * 0.25;
-      // Swing: vertraag de oneven 16e-stappen voor een shuffle-gevoel
-      const playTime = time + (step % 2 === 1 ? swingRef.current * secondsPer16th : 0);
+      // Swing: vertraag de "en"-tellen (off-8ths: stap 2,6,10,14) voor een shuffle-gevoel
+      const swung = step % 4 === 2;
+      const playTime = time + (swung ? swingRef.current * secondsPer16th * 2 : 0);
       const g = gridRef.current;
       tracks.forEach((t, i) => {
         if (g[i][step]) playDrum(t.type, playTime);

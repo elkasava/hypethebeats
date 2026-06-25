@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { playDrum, playNote, setKit, type DrumType, type Kit, type Wave } from "@/lib/funzoneAudio";
 import Sequencer from "./Sequencer";
+import LoopMixer from "./LoopMixer";
 
 type Pad = { id: string; label: string; key: string; color: string; type: DrumType };
 
@@ -194,6 +195,9 @@ export default function FunzoneStudio() {
           })}
         </div>
       </div>
+
+      {/* Loop-mixer */}
+      <LoopMixer />
     </div>
   );
 }
