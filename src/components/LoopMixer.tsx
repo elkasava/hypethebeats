@@ -44,6 +44,7 @@ function noiseHit(
 }
 
 const N = {
+  G1: 49.0, A1: 55.0, C2: 65.41, E2: 82.41,
   C3: 130.81, E3: 164.81, G3: 196.0, A3: 220.0,
   C4: 261.63, E4: 329.63, G4: 392.0, A4: 440.0,
   E5: 659.25, G5: 783.99, A5: 880.0, C6: 1046.5,
@@ -82,6 +83,17 @@ const tracks: Track[] = [
       if (step % 4 === 2) noiseHit(ctx, dest, noise, time, 0.06, "highpass", 6000, 0.4);
       if (step === 3 || step === 11) tone(ctx, dest, 320, time, 0.18, "sine", 0.45);
       if (step === 7) tone(ctx, dest, 260, time, 0.2, "sine", 0.45);
+    },
+  },
+  {
+    id: "bass", name: "Bass", color: "#eab308",
+    play: (ctx, dest, step, time) => {
+      const seq: Record<number, number> = { 0: N.C2, 3: N.C2, 6: N.E2, 8: N.A1, 11: N.A1, 14: N.G1 };
+      const f = seq[step];
+      if (f) {
+        tone(ctx, dest, f, time, 0.32, "triangle", 0.5, 0.005);
+        tone(ctx, dest, f / 2, time, 0.34, "sine", 0.3, 0.005); // sub
+      }
     },
   },
   {
@@ -184,12 +196,12 @@ function Fader({ value, onChange, label }: { value: number; onChange: (v: number
 export default function LoopMixer() {
   const [bpm, setBpm] = useState(110);
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState<number[]>([0.85, 0.6, 0.6, 0.5, 0.45]);
+  const [volume, setVolume] = useState<number[]>([0.85, 0.6, 0.8, 0.6, 0.5, 0.45]);
   const [eqLow, setEqLow] = useState<number[]>(Array(TN).fill(0.5));
   const [eqMid, setEqMid] = useState<number[]>(Array(TN).fill(0.5));
   const [eqHigh, setEqHigh] = useState<number[]>(Array(TN).fill(0.5));
   const [pan, setPan] = useState<number[]>(Array(TN).fill(0.5));
-  const [send, setSend] = useState<number[]>([0.1, 0.12, 0.2, 0.28, 0.3]);
+  const [send, setSend] = useState<number[]>([0.1, 0.12, 0.04, 0.2, 0.28, 0.3]);
   const [mute, setMute] = useState<boolean[]>(Array(TN).fill(false));
   const [solo, setSolo] = useState<boolean[]>(Array(TN).fill(false));
   const [masterVol, setMasterVol] = useState(0.8);
