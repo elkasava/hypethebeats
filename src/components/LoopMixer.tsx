@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getCtx, getMaster, setMasterVolume } from "@/lib/funzoneAudio";
 
-// Verticale studio-mixer: gesynthetiseerde loops (Drums, Percussie, Synth,
-// Fluit, Zang) als kanaalstrips met tone-knop, VU-meter, fader en mute.
+// Verticale studio-mixer met echte channel-strip onderdelen: 3-bands EQ,
+// pan, reverb-send, solo/mute, dB-schaal en clip-LED's. Alle loops worden
+// live gesynthetiseerd (geen audiobestanden).
 
 const STEPS = 16;
 type Ctx = AudioContext;
@@ -105,21 +106,16 @@ const tracks: Track[] = [
     play: (ctx, dest, step, time, sec16) => {
       if (step !== 0) return;
       const dur = sec16 * 16;
-      const formant = ctx.createBiquadFilter();
-      formant.type = "bandpass";
-      formant.frequency.value = 800;
-      formant.Q.value = 6;
-      formant.connect(dest);
       [N.C4, N.E4, N.G4].forEach((f) => {
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.type = "sawtooth";
         o.frequency.value = f;
         g.gain.setValueAtTime(0, time);
-        g.gain.linearRampToValueAtTime(0.12, time + 0.25);
-        g.gain.setValueAtTime(0.12, time + dur - 0.3);
+        g.gain.linearRampToValueAtTime(0.1, time + 0.25);
+        g.gain.setValueAtTime(0.1, time + dur - 0.3);
         g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-        o.connect(g).connect(formant);
+        o.connect(g).connect(dest);
         o.start(time);
         o.stop(time + dur + 0.05);
       });
@@ -127,18 +123,18 @@ const tracks: Track[] = [
   },
 ];
 
-const toneToFreq = (v: number) => 200 * Math.pow(90, v); // 200Hz .. 18kHz
+const TN = tracks.length;
+const dbText = (v: number) => (v <= 0.001 ? "-∞" : (20 * Math.log10(v)).toFixed(1));
 
 // ── Rotary knob ─────────────────────────────────────────────────────
-function Knob({ value, onChange, color }: { value: number; onChange: (v: number) => void; color: string }) {
+function Knob({
+  value, onChange, color, label, center,
+}: { value: number; onChange: (v: number) => void; color: string; label: string; center?: boolean }) {
   const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     const startY = e.clientY;
     const startVal = value;
-    const move = (ev: PointerEvent) => {
-      const dy = startY - ev.clientY;
-      onChange(Math.max(0, Math.min(1, startVal + dy / 140)));
-    };
+    const move = (ev: PointerEvent) => onChange(Math.max(0, Math.min(1, startVal + (startY - ev.clientY) / 140)));
     const up = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
@@ -148,79 +144,39 @@ function Knob({ value, onChange, color }: { value: number; onChange: (v: number)
   };
   const angle = -135 + value * 270;
   return (
-    <div
-      onPointerDown={onPointerDown}
-      role="slider"
-      aria-valuenow={Math.round(value * 100)}
-      aria-label="Tone"
-      tabIndex={0}
-      className="relative h-9 w-9 cursor-ns-resize rounded-full"
-      style={{
-        background: "radial-gradient(circle at 50% 35%, #3a3a38, #161615)",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)",
-      }}
-    >
-      <div className="absolute inset-0" style={{ transform: `rotate(${angle}deg)` }}>
-        <span
-          className="absolute left-1/2 top-1 h-2.5 w-[3px] -translate-x-1/2 rounded-full"
-          style={{ background: color }}
-        />
+    <div className="flex flex-col items-center gap-0.5">
+      <div
+        onPointerDown={onPointerDown}
+        onDoubleClick={() => onChange(center ? 0.5 : value)}
+        role="slider"
+        aria-valuenow={Math.round(value * 100)}
+        aria-label={label}
+        tabIndex={0}
+        className="relative h-7 w-7 cursor-ns-resize rounded-full"
+        style={{
+          background: "radial-gradient(circle at 50% 35%, #3a3a38, #161615)",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15)",
+        }}
+      >
+        <div className="absolute inset-0" style={{ transform: `rotate(${angle}deg)` }}>
+          <span className="absolute left-1/2 top-0.5 h-2 w-[2.5px] -translate-x-1/2 rounded-full" style={{ background: color }} />
+        </div>
       </div>
+      <span className="text-[7px] font-bold uppercase tracking-widest text-white/40">{label}</span>
     </div>
   );
 }
 
-// ── Kanaalstrip ─────────────────────────────────────────────────────
-function Channel({
-  name, color, volume, toneVal, muted, onVolume, onTone, onMute, meterRef,
-}: {
-  name: string; color: string; volume: number; toneVal: number; muted: boolean;
-  onVolume: (v: number) => void; onTone: (v: number) => void; onMute: () => void;
-  meterRef: (el: HTMLDivElement | null) => void;
-}) {
+function Fader({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   return (
-    <div className="flex w-[78px] shrink-0 flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3">
-      <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color }}>
-        {name}
-      </span>
-      <Knob value={toneVal} onChange={onTone} color={color} />
-      <span className="text-[8px] font-bold uppercase tracking-widest text-white/35">Tone</span>
-
-      <div className="flex h-[150px] items-stretch gap-2">
-        {/* VU-meter */}
-        <div className="relative w-2.5 overflow-hidden rounded-full bg-black/50">
-          <div
-            className="absolute inset-0"
-            style={{ background: "linear-gradient(to top, #22c55e 0%, #22c55e 55%, #eab308 78%, #ef4444 100%)" }}
-          />
-          <div ref={meterRef} className="absolute inset-x-0 top-0 bg-[#111110]" style={{ height: "100%" }} />
-        </div>
-        {/* Fader */}
-        <div className="relative flex w-9 items-center justify-center">
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => onVolume(Number(e.target.value))}
-            aria-label={`${name} volume`}
-            className="fader absolute w-[150px] cursor-pointer"
-            style={{ transform: "rotate(-90deg)" }}
-          />
-        </div>
-      </div>
-
-      <button
-        onClick={onMute}
-        aria-pressed={muted}
-        aria-label={`${name} ${muted ? "aan" : "dempen"}`}
-        className={`w-full rounded-md py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
-          muted ? "bg-red-500 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"
-        }`}
-      >
-        {muted ? "Muted" : "Mute"}
-      </button>
+    <div className="relative flex w-8 items-center justify-center">
+      <input
+        type="range" min={0} max={1} step={0.01} value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={label}
+        className="fader absolute w-[150px] cursor-pointer"
+        style={{ transform: "rotate(-90deg)" }}
+      />
     </div>
   );
 }
@@ -229,21 +185,32 @@ export default function LoopMixer() {
   const [bpm, setBpm] = useState(110);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState<number[]>([0.85, 0.6, 0.6, 0.5, 0.45]);
-  const [toneVals, setToneVals] = useState<number[]>(tracks.map(() => 1));
-  const [muted, setMuted] = useState<boolean[]>(tracks.map(() => false));
+  const [eqLow, setEqLow] = useState<number[]>(Array(TN).fill(0.5));
+  const [eqMid, setEqMid] = useState<number[]>(Array(TN).fill(0.5));
+  const [eqHigh, setEqHigh] = useState<number[]>(Array(TN).fill(0.5));
+  const [pan, setPan] = useState<number[]>(Array(TN).fill(0.5));
+  const [send, setSend] = useState<number[]>([0.1, 0.12, 0.2, 0.28, 0.3]);
+  const [mute, setMute] = useState<boolean[]>(Array(TN).fill(false));
+  const [solo, setSolo] = useState<boolean[]>(Array(TN).fill(false));
   const [masterVol, setMasterVol] = useState(0.8);
   const [currentStep, setCurrentStep] = useState(-1);
 
   const bpmRef = useRef(bpm);
-  const mutedRef = useRef(muted);
   const noiseRef = useRef<AudioBuffer | null>(null);
-  const gainsRef = useRef<GainNode[]>([]);
-  const filtersRef = useRef<BiquadFilterNode[]>([]);
-  const analysersRef = useRef<AnalyserNode[]>([]);
+  const inRef = useRef<BiquadFilterNode[]>([]); // EQ low = channel input
+  const midRef = useRef<BiquadFilterNode[]>([]);
+  const highRef = useRef<BiquadFilterNode[]>([]);
+  const panRef = useRef<StereoPannerNode[]>([]);
+  const gainRef = useRef<GainNode[]>([]);
+  const sendRef = useRef<GainNode[]>([]);
+  const analyserRef = useRef<AnalyserNode[]>([]);
   const masterAnalyserRef = useRef<AnalyserNode | null>(null);
+
   const meterEls = useRef<(HTMLDivElement | null)[]>([]);
+  const clipEls = useRef<(HTMLDivElement | null)[]>([]);
   const masterMeterEl = useRef<HTMLDivElement | null>(null);
-  const smoothRef = useRef<number[]>(tracks.map(() => 0).concat(0));
+  const smoothRef = useRef<number[]>(Array(TN + 1).fill(0));
+  const clipUntil = useRef<number[]>(Array(TN + 1).fill(0));
   const bufRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
 
   const nextNoteTimeRef = useRef(0);
@@ -254,71 +221,88 @@ export default function LoopMixer() {
   const shownRef = useRef(-1);
 
   useEffect(() => { bpmRef.current = bpm; }, [bpm]);
-  useEffect(() => { mutedRef.current = muted; }, [muted]);
 
-  // Audio-keten opzetten: per kanaal gain → lowpass → analyser → master
+  // Audio-keten opzetten
   useEffect(() => {
     const ctx = getCtx();
     const master = getMaster();
     if (!ctx || !master) return;
+
     const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const dd = buf.getChannelData(0);
+    for (let i = 0; i < dd.length; i++) dd[i] = Math.random() * 2 - 1;
     noiseRef.current = buf;
     bufRef.current = new Uint8Array(new ArrayBuffer(256));
 
+    // Gedeelde reverb-bus
+    const irLen = ctx.sampleRate * 1.8;
+    const ir = ctx.createBuffer(2, irLen, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 2.5);
+    }
+    const convolver = ctx.createConvolver();
+    convolver.buffer = ir;
+    const reverbReturn = ctx.createGain();
+    reverbReturn.gain.value = 0.9;
+    convolver.connect(reverbReturn).connect(master);
+
     tracks.forEach((_, i) => {
+      const low = ctx.createBiquadFilter(); low.type = "lowshelf"; low.frequency.value = 250;
+      const mid = ctx.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 1200; mid.Q.value = 1;
+      const high = ctx.createBiquadFilter(); high.type = "highshelf"; high.frequency.value = 4500;
+      const panner = ctx.createStereoPanner();
       const g = ctx.createGain();
-      const f = ctx.createBiquadFilter();
-      f.type = "lowpass";
-      f.frequency.value = toneToFreq(toneVals[i]);
-      const a = ctx.createAnalyser();
-      a.fftSize = 256;
-      g.gain.value = muted[i] ? 0 : volume[i];
-      g.connect(f).connect(a).connect(master);
-      gainsRef.current[i] = g;
-      filtersRef.current[i] = f;
-      analysersRef.current[i] = a;
+      const a = ctx.createAnalyser(); a.fftSize = 256;
+      const s = ctx.createGain(); s.gain.value = send[i] * 0.6;
+      g.gain.value = mute[i] ? 0 : volume[i];
+
+      low.connect(mid).connect(high).connect(panner).connect(g).connect(a).connect(master);
+      g.connect(s).connect(convolver);
+
+      inRef.current[i] = low; midRef.current[i] = mid; highRef.current[i] = high;
+      panRef.current[i] = panner; gainRef.current[i] = g; analyserRef.current[i] = a; sendRef.current[i] = s;
     });
-    const ma = ctx.createAnalyser();
-    ma.fftSize = 256;
+
+    const ma = ctx.createAnalyser(); ma.fftSize = 256;
     master.connect(ma);
     masterAnalyserRef.current = ma;
 
     return () => {
-      gainsRef.current.forEach((g) => g?.disconnect());
-      analysersRef.current.forEach((a) => a?.disconnect());
+      gainRef.current.forEach((g) => g?.disconnect());
+      analyserRef.current.forEach((a) => a?.disconnect());
+      sendRef.current.forEach((s) => s?.disconnect());
+      convolver.disconnect();
       masterAnalyserRef.current?.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // UI → audio-nodes
+  // UI → nodes
   useEffect(() => {
+    const anySolo = solo.some(Boolean);
     volume.forEach((v, i) => {
-      const g = gainsRef.current[i];
-      if (g) g.gain.value = muted[i] ? 0 : v;
+      const g = gainRef.current[i];
+      if (g) g.gain.value = anySolo ? (solo[i] ? v : 0) : mute[i] ? 0 : v;
     });
-  }, [volume, muted]);
-  useEffect(() => {
-    toneVals.forEach((v, i) => {
-      const f = filtersRef.current[i];
-      if (f) f.frequency.value = toneToFreq(v);
-    });
-  }, [toneVals]);
+  }, [volume, mute, solo]);
+  useEffect(() => { eqLow.forEach((v, i) => { const f = inRef.current[i]; if (f) f.gain.value = (v - 0.5) * 24; }); }, [eqLow]);
+  useEffect(() => { eqMid.forEach((v, i) => { const f = midRef.current[i]; if (f) f.gain.value = (v - 0.5) * 24; }); }, [eqMid]);
+  useEffect(() => { eqHigh.forEach((v, i) => { const f = highRef.current[i]; if (f) f.gain.value = (v - 0.5) * 24; }); }, [eqHigh]);
+  useEffect(() => { pan.forEach((v, i) => { const p = panRef.current[i]; if (p) p.pan.value = (v - 0.5) * 2; }); }, [pan]);
+  useEffect(() => { send.forEach((v, i) => { const s = sendRef.current[i]; if (s) s.gain.value = v * 0.6; }); }, [send]);
   useEffect(() => { setMasterVolume(masterVol); }, [masterVol]);
 
   const schedule = useCallback(() => {
     const ctx = getCtx();
     if (!ctx || !noiseRef.current) return;
-    const scheduleAhead = 0.12;
-    while (nextNoteTimeRef.current < ctx.currentTime + scheduleAhead) {
+    while (nextNoteTimeRef.current < ctx.currentTime + 0.12) {
       const step = stepRef.current;
       const time = nextNoteTimeRef.current;
       const sec16 = (60 / bpmRef.current) * 0.25;
       tracks.forEach((t, i) => {
-        const dest = gainsRef.current[i];
-        if (dest && !mutedRef.current[i]) t.play(ctx, dest, step, time, sec16, noiseRef.current!);
+        const dest = inRef.current[i];
+        if (dest) t.play(ctx, dest, step, time, sec16, noiseRef.current!);
       });
       queueRef.current.push({ step, time });
       nextNoteTimeRef.current += sec16;
@@ -327,7 +311,7 @@ export default function LoopMixer() {
     timerRef.current = window.setTimeout(schedule, 25);
   }, []);
 
-  const readMeter = (a: AnalyserNode | null, idx: number, el: HTMLDivElement | null) => {
+  const readMeter = (a: AnalyserNode | null, idx: number, el: HTMLDivElement | null, clip: HTMLDivElement | null) => {
     if (!a || !el || !bufRef.current) return;
     a.getByteTimeDomainData(bufRef.current);
     let sum = 0;
@@ -340,6 +324,11 @@ export default function LoopMixer() {
     lvl = Math.max(lvl, smoothRef.current[idx] * 0.86);
     smoothRef.current[idx] = lvl;
     el.style.height = `${(1 - lvl) * 100}%`;
+    if (clip) {
+      const now = performance.now();
+      if (lvl > 0.94) clipUntil.current[idx] = now + 800;
+      clip.style.background = now < clipUntil.current[idx] ? "#ef4444" : "rgba(255,255,255,0.12)";
+    }
   };
 
   const draw = useCallback(() => {
@@ -352,8 +341,8 @@ export default function LoopMixer() {
         q.shift();
       }
       setCurrentStep(shownRef.current);
-      analysersRef.current.forEach((a, i) => readMeter(a, i, meterEls.current[i]));
-      readMeter(masterAnalyserRef.current, tracks.length, masterMeterEl.current);
+      analyserRef.current.forEach((a, i) => readMeter(a, i, meterEls.current[i], clipEls.current[i]));
+      readMeter(masterAnalyserRef.current, TN, masterMeterEl.current, null);
     }
     rafRef.current = requestAnimationFrame(draw);
   }, []);
@@ -389,6 +378,18 @@ export default function LoopMixer() {
 
   const upd = (setter: React.Dispatch<React.SetStateAction<number[]>>, i: number, v: number) =>
     setter((prev) => prev.map((p, j) => (j === i ? v : p)));
+  const toggle = (setter: React.Dispatch<React.SetStateAction<boolean[]>>, i: number) =>
+    setter((prev) => prev.map((p, j) => (j === i ? !p : p)));
+
+  const Meter = ({ mRef, cRef }: { mRef: (el: HTMLDivElement | null) => void; cRef?: (el: HTMLDivElement | null) => void }) => (
+    <div className="flex flex-col items-center gap-1">
+      <div ref={cRef} className="h-1.5 w-2.5 rounded-sm" style={{ background: "rgba(255,255,255,0.12)" }} />
+      <div className="relative h-[136px] w-2.5 overflow-hidden rounded-full bg-black/50">
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #22c55e 0%, #22c55e 55%, #eab308 78%, #ef4444 100%)" }} />
+        <div ref={mRef} className="absolute inset-x-0 top-0 bg-[#111110]" style={{ height: "100%" }} />
+      </div>
+    </div>
+  );
 
   return (
     <div className="rounded-2xl border border-foreground/10 bg-[#111110] p-5 text-white sm:p-7">
@@ -399,82 +400,80 @@ export default function LoopMixer() {
             <h2 className="font-display text-2xl font-bold tracking-tight">Loop-mixer</h2>
           </div>
           <p className="mt-1 text-sm text-white/55">
-            Een mini mengtafel — schuif de faders, draai de tone-knop en meng je eigen loop
+            Volwaardige mini-mengtafel — EQ, pan, reverb, solo/mute en faders met dB
           </p>
         </div>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-white/45">BPM</span>
-            <input
-              type="range" min={70} max={150} value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value))}
-              className="h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-white/15 accent-accent"
-            />
+            <input type="range" min={70} max={150} value={bpm} onChange={(e) => setBpm(Number(e.target.value))}
+              className="h-1.5 w-24 cursor-pointer appearance-none rounded-full bg-white/15 accent-accent" />
             <span className="w-9 font-display text-base font-black tabular-nums">{bpm}</span>
           </label>
-          <button
-            onClick={() => (playing ? stop() : start())}
-            aria-label={playing ? "Stop" : "Play"}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent text-lg text-[#111110] transition-transform hover:scale-105 active:scale-95"
-          >
+          <button onClick={() => (playing ? stop() : start())} aria-label={playing ? "Stop" : "Play"}
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent text-lg text-[#111110] transition-transform hover:scale-105 active:scale-95">
             {playing ? "■" : "▶"}
           </button>
         </div>
       </div>
 
       {/* Console */}
-      <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
+      <div className="mt-6 flex gap-2.5 overflow-x-auto pb-2">
         {tracks.map((t, i) => (
-          <Channel
-            key={t.id}
-            name={t.name}
-            color={t.color}
-            volume={volume[i]}
-            toneVal={toneVals[i]}
-            muted={muted[i]}
-            onVolume={(v) => upd(setVolume, i, v)}
-            onTone={(v) => upd(setToneVals, i, v)}
-            onMute={() => setMuted((prev) => prev.map((m, j) => (j === i ? !m : m)))}
-            meterRef={(el) => {
-              meterEls.current[i] = el;
-            }}
-          />
-        ))}
+          <div key={t.id} className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: t.color }}>{t.name}</span>
 
-        {/* Master-strip */}
-        <div className="flex w-[78px] shrink-0 flex-col items-center gap-3 rounded-xl border border-accent/30 bg-accent/[0.06] p-3">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-accent">Master</span>
-          <div className="h-9" />
-          <span className="text-[8px] font-bold uppercase tracking-widest text-white/35">Out</span>
-          <div className="flex h-[150px] items-stretch gap-2">
-            <div className="relative w-2.5 overflow-hidden rounded-full bg-black/50">
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, #22c55e 0%, #22c55e 55%, #eab308 78%, #ef4444 100%)" }}
-              />
-              <div ref={masterMeterEl} className="absolute inset-x-0 top-0 bg-[#111110]" style={{ height: "100%" }} />
+            {/* EQ */}
+            <div className="flex items-start justify-center gap-1">
+              <Knob value={eqLow[i]} onChange={(v) => upd(setEqLow, i, v)} color={t.color} label="Lo" center />
+              <Knob value={eqMid[i]} onChange={(v) => upd(setEqMid, i, v)} color={t.color} label="Mid" center />
+              <Knob value={eqHigh[i]} onChange={(v) => upd(setEqHigh, i, v)} color={t.color} label="Hi" center />
             </div>
-            <div className="relative flex w-9 items-center justify-center">
-              <input
-                type="range" min={0} max={1} step={0.01} value={masterVol}
-                onChange={(e) => setMasterVol(Number(e.target.value))}
-                aria-label="Master volume"
-                className="fader absolute w-[150px] cursor-pointer"
-                style={{ transform: "rotate(-90deg)" }}
-              />
+            {/* Pan + Send */}
+            <div className="flex items-start justify-center gap-2">
+              <Knob value={pan[i]} onChange={(v) => upd(setPan, i, v)} color="#ffffff" label="Pan" center />
+              <Knob value={send[i]} onChange={(v) => upd(setSend, i, v)} color="#22d3ee" label="Verb" />
+            </div>
+
+            {/* Meter + fader */}
+            <div className="mt-1 flex items-stretch gap-2">
+              <Meter mRef={(el) => { meterEls.current[i] = el; }} cRef={(el) => { clipEls.current[i] = el; }} />
+              <Fader value={volume[i]} onChange={(v) => upd(setVolume, i, v)} label={`${t.name} volume`} />
+            </div>
+            <span className="font-mono text-[9px] tabular-nums text-white/45">{dbText(volume[i])} dB</span>
+
+            {/* Solo + Mute */}
+            <div className="flex w-full gap-1">
+              <button onClick={() => toggle(setSolo, i)} aria-pressed={solo[i]}
+                className={`flex-1 rounded-md py-1 text-[9px] font-black uppercase tracking-widest transition-colors ${solo[i] ? "bg-yellow-400 text-[#111110]" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
+                Solo
+              </button>
+              <button onClick={() => toggle(setMute, i)} aria-pressed={mute[i]}
+                className={`flex-1 rounded-md py-1 text-[9px] font-black uppercase tracking-widest transition-colors ${mute[i] ? "bg-red-500 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
+                Mute
+              </button>
             </div>
           </div>
-          <div className="flex w-full justify-center gap-1">
+        ))}
+
+        {/* Master */}
+        <div className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-xl border border-accent/30 bg-accent/[0.06] p-2.5">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-accent">Master</span>
+          <div className="h-[58px]" />
+          <div className="mt-1 flex items-stretch gap-2">
+            <Meter mRef={(el) => { masterMeterEl.current = el; }} />
+            <Fader value={masterVol} onChange={setMasterVol} label="Master volume" />
+          </div>
+          <span className="font-mono text-[9px] tabular-nums text-white/45">{dbText(masterVol)} dB</span>
+          <div className="flex w-full justify-center gap-1 pt-1">
             {Array.from({ length: 4 }).map((_, k) => (
-              <span
-                key={k}
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: playing && currentStep >= 0 && Math.floor(currentStep / 4) === k ? "#84cc16" : "rgba(255,255,255,0.18)" }}
-              />
+              <span key={k} className="h-1.5 w-1.5 rounded-full"
+                style={{ background: playing && currentStep >= 0 && Math.floor(currentStep / 4) === k ? "#84cc16" : "rgba(255,255,255,0.18)" }} />
             ))}
           </div>
         </div>
       </div>
+      <p className="mt-3 text-xs text-white/40">Tip: sleep knoppen verticaal · dubbelklik zet EQ/Pan terug op het midden.</p>
     </div>
   );
 }
