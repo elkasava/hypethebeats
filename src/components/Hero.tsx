@@ -95,6 +95,17 @@ export default function Hero() {
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+
+              {/* Funzone-knop onderaan de blob-video */}
+              <a
+                href="/funzone"
+                className="group absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-[#111110] shadow-lg ring-1 ring-black/10 transition-all duration-300 hover:-translate-x-1/2 hover:-translate-y-0.5 hover:brightness-105"
+              >
+                <span className="text-base transition-transform duration-300 group-hover:scale-125" aria-hidden="true">
+                  🎮
+                </span>
+                Funzone — speel mee
+              </a>
             </div>
           </motion.div>
         </div>
