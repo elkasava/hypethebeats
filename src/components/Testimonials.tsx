@@ -2,6 +2,7 @@ import Image from "next/image";
 import { testimonials } from "@/lib/content";
 import Reveal from "./Reveal";
 import AnimatedHeading from "./AnimatedHeading";
+import Sticker from "./Sticker";
 
 function initials(name: string) {
   return name
@@ -17,6 +18,9 @@ export default function Testimonials() {
 
   return (
     <section id="verhalen" aria-label="Verhalen van opdrachtgevers" className="relative bg-surface-2 py-28 md:py-36">
+      <Sticker shape="pill" color="#111110" text="#84cc16" rotate={7} size={1.5} className="absolute right-3 bottom-16 z-20 hidden lg:block">
+        Yasss
+      </Sticker>
       <div className="container-px relative z-10 mx-auto max-w-7xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>

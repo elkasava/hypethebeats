@@ -2,6 +2,7 @@ import Image from "next/image";
 import { offerings } from "@/lib/content";
 import Reveal from "./Reveal";
 import AnimatedHeading from "./AnimatedHeading";
+import Sticker from "./Sticker";
 
 // Spotify Wrapped-stijl harde kleurblokken; laatste zwart zodat het aansluit op de donkere balk eronder
 const palette = [
@@ -13,7 +14,10 @@ const palette = [
 
 export default function Offerings() {
   return (
-    <section id="aanbod" aria-label="Ons aanbod" className="py-28 md:py-36">
+    <section id="aanbod" aria-label="Ons aanbod" className="relative py-28 md:py-36">
+      <Sticker shape="pill" color="#84cc16" rotate={-9} size={1.3} className="absolute left-3 top-16 z-20 hidden lg:block">
+        Good vibes
+      </Sticker>
       <div className="container-px mx-auto max-w-7xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">

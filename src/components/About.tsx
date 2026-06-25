@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Reveal from "./Reveal";
 import AnimatedHeading from "./AnimatedHeading";
+import Sticker from "./Sticker";
 
 const values = [
   {
@@ -22,7 +23,10 @@ const values = [
 
 export default function About() {
   return (
-    <section id="over-ons" aria-label="Over ons" className="py-28 md:py-36">
+    <section id="over-ons" aria-label="Over ons" className="relative py-28 md:py-36">
+      <Sticker shape="burst" color="#2563eb" text="#ffffff" rotate={-12} size={1.15} className="absolute right-4 top-12 z-20 hidden lg:block">
+        Boom!
+      </Sticker>
       <div className="container-px mx-auto max-w-7xl">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           <Reveal>

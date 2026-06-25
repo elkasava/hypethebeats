@@ -2,10 +2,14 @@ import { stats } from "@/lib/content";
 import Reveal from "./Reveal";
 import AnimatedCounter from "./AnimatedCounter";
 import AnimatedHeading from "./AnimatedHeading";
+import Sticker from "./Sticker";
 
 export default function ImpactStats() {
   return (
-    <section id="impact" aria-label="Impact in cijfers" className="bg-surface-2 py-24 md:py-32">
+    <section id="impact" aria-label="Impact in cijfers" className="relative bg-surface-2 py-24 md:py-32">
+      <Sticker shape="circle" color="#84cc16" rotate={10} size={1.25} className="absolute right-4 top-14 z-20 hidden lg:block">
+        Beats
+      </Sticker>
       <div className="container-px mx-auto max-w-7xl">
         <Reveal>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-accent-2">

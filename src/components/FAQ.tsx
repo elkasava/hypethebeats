@@ -5,12 +5,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { faqs } from "@/lib/content";
 import Reveal from "./Reveal";
 import AnimatedHeading from "./AnimatedHeading";
+import Sticker from "./Sticker";
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" aria-label="Veelgestelde vragen" className="py-28 md:py-36">
+    <section id="faq" aria-label="Veelgestelde vragen" className="relative py-28 md:py-36">
+      <Sticker shape="square" color="#ff5da2" rotate={-7} size={1.3} className="absolute left-4 top-20 z-20 hidden lg:block">
+        Funk
+      </Sticker>
       <div className="container-px mx-auto max-w-5xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
           <div className="max-w-xl">
