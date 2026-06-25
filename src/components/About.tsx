@@ -29,8 +29,8 @@ export default function About() {
             <div className="relative">
               <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-border">
                 <Image
-                  src="https://images.unsplash.com/photo-1543007631-283050bb3e8c?q=80&w=1400&auto=format&fit=crop"
-                  alt="Muziekdocent van Hype The Beats begeleidt een groep tijdens een workshop"
+                  src="/offerings/studio.webp"
+                  alt="De professionele studio van Hype The Beats waar workshops en opnames plaatsvinden"
                   fill
                   sizes="(max-width: 1024px) 90vw, 44vw"
                   className="object-cover"
