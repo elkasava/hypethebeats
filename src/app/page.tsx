@@ -65,9 +65,10 @@ export default function Home() {
       />
       <Header />
       <main>
-        {/* Eerste scherm: hero vult de ruimte, ticker plakt exact onderaan op elke resolutie */}
-        <div className="flex h-[100svh] flex-col overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col">
+        {/* Eerste scherm: op desktop vult de hero exact de viewport met de ticker onderaan.
+            Op mobiel is er te veel inhoud voor één scherm, dus laten we alles natuurlijk stromen. */}
+        <div className="flex flex-col md:h-[100svh] md:overflow-hidden">
+          <div className="flex flex-col md:min-h-0 md:flex-1">
             <Hero />
           </div>
           <Ticker />

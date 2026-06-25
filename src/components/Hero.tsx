@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function Hero() {
   return (
-    <section id="top" className="relative flex h-full flex-col overflow-hidden pt-24 pb-0 md:pt-28">
+    <section id="top" className="relative flex flex-col overflow-hidden pt-24 pb-12 md:h-full md:pb-0 md:pt-28">
       <div className="noise-overlay z-0" />
 
       <div className="container-px relative z-10 mx-auto max-w-7xl">
