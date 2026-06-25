@@ -10,7 +10,7 @@ export default function Hero() {
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setOffset(-Math.min(window.scrollY * 0.05, 22)));
+      raf = requestAnimationFrame(() => setOffset(Math.min(window.scrollY * 0.05, 22)));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
@@ -111,31 +111,22 @@ export default function Hero() {
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+            </div>
 
-              {/* Knoppen onderaan de blob-video — zelfde breedte, subtiele parallax */}
-              <div
-                className="absolute inset-x-5 bottom-5 z-10 flex flex-col gap-2"
-                style={{ transform: `translateY(${offset}px)`, transition: "transform 0.1s linear" }}
+            {/* Particulier-knop bovenaan de blob — buiten de overflow zodat hij niet wordt afgesneden — met subtiele parallax */}
+            <div
+              className="absolute left-1/2 top-3 z-20"
+              style={{ transform: `translateX(-50%) translateY(${offset}px)`, transition: "transform 0.1s linear" }}
+            >
+              <a
+                href="#particulier"
+                className="group flex items-center gap-2 whitespace-nowrap rounded-full bg-accent px-5 py-2.5 text-xs font-bold text-[#111110] shadow-lg ring-1 ring-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:brightness-105 sm:text-sm"
               >
-                <a
-                  href="/funzone"
-                  className="group flex w-full items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-bold text-[#111110] shadow-lg ring-1 ring-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:brightness-105 sm:text-sm"
-                >
-                  <span className="text-base transition-transform duration-300 group-hover:scale-125" aria-hidden="true">
-                    🎮
-                  </span>
-                  Funzone — speel mee
-                </a>
-                <a
-                  href="#particulier"
-                  className="group flex w-full items-center justify-center gap-2 rounded-full bg-[#111110] px-5 py-2.5 text-xs font-bold text-white shadow-lg ring-1 ring-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 sm:text-sm"
-                >
-                  <span className="text-base transition-transform duration-300 group-hover:scale-125" aria-hidden="true">
-                    👏
-                  </span>
-                  Ook als particulier? Meld je aan
-                </a>
-              </div>
+                <span className="text-base transition-transform duration-300 group-hover:scale-125" aria-hidden="true">
+                  👏
+                </span>
+                Ook als particulier? Meld je aan
+              </a>
             </div>
           </motion.div>
         </div>

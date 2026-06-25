@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCtx, playDrum, type DrumType, type Kit } from "@/lib/funzoneAudio";
+import {
+  getCtx,
+  playDrum,
+  setMasterVolume,
+  setMuted,
+  type DrumType,
+  type Kit,
+} from "@/lib/funzoneAudio";
 
 type Track = { id: string; label: string; color: string; type: DrumType };
 
@@ -33,18 +40,34 @@ const genrePatterns: Record<Kit, Grid> = {
     b("1010101010101010"), // hihat — driving 8ths
     b("0000100000001000"), // clap — backbeat
   ],
+  house: [
+    b("1000100010001000"), // kick — four on the floor
+    b("0000000000000000"), // snare
+    b("0010001000100010"), // hihat — offbeat
+    b("0000100000001000"), // clap — backbeat
+  ],
+  boombap: [
+    b("1000000000100000"), // kick — laid back
+    b("0000100000001000"), // snare — backbeat
+    b("1010101010101010"), // hihat — 8ths (zet swing erbij!)
+    b("0000000000000000"), // clap
+  ],
 };
 
-const tempoFor: Record<Kit, number> = { pop: 116, dancehall: 100 };
+const tempoFor: Record<Kit, number> = { pop: 116, dancehall: 100, house: 124, boombap: 90 };
 
 export default function Sequencer({ genre }: { genre: Kit }) {
   const [bpm, setBpm] = useState(tempoFor[genre]);
+  const [swing, setSwing] = useState(0);
+  const [volume, setVolume] = useState(0.8);
+  const [mute, setMute] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [grid, setGrid] = useState<Grid>(() => genrePatterns[genre].map((r) => r.slice()));
   const [currentStep, setCurrentStep] = useState(-1);
 
   const gridRef = useRef(grid);
   const bpmRef = useRef(bpm);
+  const swingRef = useRef(swing);
   const nextNoteTimeRef = useRef(0);
   const stepRef = useRef(0);
   const timerRef = useRef<number | null>(null);
@@ -58,6 +81,11 @@ export default function Sequencer({ genre }: { genre: Kit }) {
   useEffect(() => {
     bpmRef.current = bpm;
   }, [bpm]);
+  useEffect(() => {
+    swingRef.current = swing;
+  }, [swing]);
+  useEffect(() => setMasterVolume(volume), [volume]);
+  useEffect(() => setMuted(mute), [mute]);
 
   // Bij stijlwissel: laad het genre-patroon en het bijpassende tempo
   useEffect(() => {
@@ -72,13 +100,15 @@ export default function Sequencer({ genre }: { genre: Kit }) {
     while (nextNoteTimeRef.current < c.currentTime + scheduleAhead) {
       const step = stepRef.current;
       const time = nextNoteTimeRef.current;
+      const secondsPer16th = (60 / bpmRef.current) * 0.25;
+      // Swing: vertraag de oneven 16e-stappen voor een shuffle-gevoel
+      const playTime = time + (step % 2 === 1 ? swingRef.current * secondsPer16th : 0);
       const g = gridRef.current;
       tracks.forEach((t, i) => {
-        if (g[i][step]) playDrum(t.type, time);
+        if (g[i][step]) playDrum(t.type, playTime);
       });
-      queueRef.current.push({ step, time });
-      const secondsPerBeat = 60 / bpmRef.current;
-      nextNoteTimeRef.current += 0.25 * secondsPerBeat;
+      queueRef.current.push({ step, time: playTime });
+      nextNoteTimeRef.current += secondsPer16th;
       stepRef.current = (step + 1) % STEPS;
     }
     timerRef.current = window.setTimeout(schedule, 25);
@@ -165,18 +195,64 @@ export default function Sequencer({ genre }: { genre: Kit }) {
         </div>
       </div>
 
-      {/* BPM */}
-      <div className="mt-5 flex items-center gap-3">
-        <span className="text-xs font-bold uppercase tracking-widest text-white/45">BPM</span>
-        <input
-          type="range"
-          min={70}
-          max={170}
-          value={bpm}
-          onChange={(e) => setBpm(Number(e.target.value))}
-          className="h-1.5 w-48 cursor-pointer appearance-none rounded-full bg-white/15 accent-accent"
-        />
-        <span className="w-12 font-display text-lg font-black tabular-nums">{bpm}</span>
+      {/* Regelaars: BPM · Swing · Volume · Mute */}
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <label className="flex items-center gap-3">
+          <span className="text-xs font-bold uppercase tracking-widest text-white/45">BPM</span>
+          <input
+            type="range"
+            min={70}
+            max={170}
+            value={bpm}
+            onChange={(e) => setBpm(Number(e.target.value))}
+            className="h-1.5 w-36 cursor-pointer appearance-none rounded-full bg-white/15 accent-accent"
+          />
+          <span className="w-9 font-display text-base font-black tabular-nums">{bpm}</span>
+        </label>
+
+        <label className="flex items-center gap-3">
+          <span className="text-xs font-bold uppercase tracking-widest text-white/45">Swing</span>
+          <input
+            type="range"
+            min={0}
+            max={0.5}
+            step={0.01}
+            value={swing}
+            onChange={(e) => setSwing(Number(e.target.value))}
+            className="h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-white/15 accent-accent"
+          />
+          <span className="w-9 font-display text-base font-black tabular-nums">
+            {Math.round(swing * 200)}
+          </span>
+        </label>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMute((m) => !m)}
+            aria-label={mute ? "Geluid aan" : "Dempen"}
+            aria-pressed={mute}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg border text-base transition-colors ${
+              mute
+                ? "border-transparent bg-white text-[#111110]"
+                : "border-white/15 text-white hover:bg-white/10"
+            }`}
+          >
+            {mute ? "🔇" : "🔊"}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={mute ? 0 : volume}
+            onChange={(e) => {
+              setVolume(Number(e.target.value));
+              if (mute) setMute(false);
+            }}
+            aria-label="Volume"
+            className="h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-white/15 accent-accent"
+          />
+        </div>
       </div>
 
       {/* Grid */}

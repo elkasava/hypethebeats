@@ -12,7 +12,7 @@ let currentKit: Kit = "pop";
 
 export type DrumType = "kick" | "snare" | "hihat" | "clap";
 export type Wave = "sine" | "triangle" | "sawtooth" | "square";
-export type Kit = "pop" | "dancehall";
+export type Kit = "pop" | "dancehall" | "house" | "boombap";
 
 type KitParams = {
   kick: { f0: number; f1: number; dur: number; gain: number };
@@ -35,6 +35,20 @@ const kits: Record<Kit, KitParams> = {
     snare: { hp: 1200, dur: 0.11, toneFreq: 250, toneGain: 0.5, noiseGain: 0.45 },
     hihat: { hp: 9500, dur: 0.03, gain: 0.45 },
     clap: { bp: 1000, dur: 0.2, gain: 0.6 },
+  },
+  house: {
+    // Strakke punchy kick, heldere clap, open-ish hats
+    kick: { f0: 145, f1: 50, dur: 0.2, gain: 1 },
+    snare: { hp: 2000, dur: 0.16, toneFreq: 210, toneGain: 0.35, noiseGain: 0.6 },
+    hihat: { hp: 8500, dur: 0.06, gain: 0.4 },
+    clap: { bp: 1600, dur: 0.16, gain: 0.65 },
+  },
+  boombap: {
+    // Dusty hiphop: warme kick, dikke snappy snare, loszittende hats
+    kick: { f0: 135, f1: 46, dur: 0.24, gain: 1.05 },
+    snare: { hp: 1000, dur: 0.22, toneFreq: 175, toneGain: 0.45, noiseGain: 0.7 },
+    hihat: { hp: 7000, dur: 0.05, gain: 0.42 },
+    clap: { bp: 1200, dur: 0.18, gain: 0.55 },
   },
 };
 

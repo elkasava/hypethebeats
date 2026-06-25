@@ -1,16 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  playDrum,
-  playNote,
-  setKit,
-  setMasterVolume,
-  setMuted,
-  type DrumType,
-  type Kit,
-  type Wave,
-} from "@/lib/funzoneAudio";
+import { playDrum, playNote, setKit, type DrumType, type Kit, type Wave } from "@/lib/funzoneAudio";
 import Sequencer from "./Sequencer";
 
 type Pad = { id: string; label: string; key: string; color: string; type: DrumType };
@@ -43,19 +34,17 @@ const waves: { id: Wave; label: string }[] = [
 const genres: { id: Kit; label: string }[] = [
   { id: "pop", label: "Pop" },
   { id: "dancehall", label: "Dancehall" },
+  { id: "house", label: "House" },
+  { id: "boombap", label: "Boom-bap" },
 ];
 
 export default function FunzoneStudio() {
   const [active, setActive] = useState<Set<string>>(new Set());
   const [wave, setWave] = useState<Wave>("triangle");
   const [genre, setGenre] = useState<Kit>("pop");
-  const [volume, setVolume] = useState(0.8);
-  const [mute, setMute] = useState(false);
 
-  // Houd de audio-engine in sync met de UI
+  // Houd de drumkit in sync met de gekozen stijl
   useEffect(() => setKit(genre), [genre]);
-  useEffect(() => setMasterVolume(volume), [volume]);
-  useEffect(() => setMuted(mute), [mute]);
 
   const flash = useCallback((id: string) => {
     setActive((prev) => new Set(prev).add(id));
@@ -91,50 +80,22 @@ export default function FunzoneStudio() {
 
   return (
     <div className="mt-12 space-y-12">
-      {/* Controlebalk: stijl + mute + volume */}
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-border bg-surface px-5 py-4">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-muted">Stijl</span>
-          <div className="flex gap-1 rounded-xl bg-surface-2 p-1">
-            {genres.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => setGenre(g.id)}
-                aria-pressed={genre === g.id}
-                className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-                  genre === g.id ? "bg-accent text-[#111110]" : "text-muted hover:text-foreground"
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setMute((m) => !m)}
-            aria-label={mute ? "Geluid aan" : "Dempen"}
-            aria-pressed={mute}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg transition-colors ${
-              mute ? "border-transparent bg-foreground text-background" : "border-border text-foreground hover:bg-black/5"
-            }`}
-          >
-            {mute ? "🔇" : "🔊"}
-          </button>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={mute ? 0 : volume}
-            onChange={(e) => {
-              setVolume(Number(e.target.value));
-              if (mute) setMute(false);
-            }}
-            aria-label="Volume"
-            className="h-1.5 w-40 cursor-pointer appearance-none rounded-full bg-surface-2 accent-accent"
-          />
+      {/* Stijl-kiezer */}
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-5 py-4">
+        <span className="text-xs font-bold uppercase tracking-widest text-muted">Stijl</span>
+        <div className="flex flex-wrap gap-1 rounded-xl bg-surface-2 p-1">
+          {genres.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => setGenre(g.id)}
+              aria-pressed={genre === g.id}
+              className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                genre === g.id ? "bg-accent text-[#111110]" : "text-muted hover:text-foreground"
+              }`}
+            >
+              {g.label}
+            </button>
+          ))}
         </div>
       </div>
 
