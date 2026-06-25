@@ -185,17 +185,20 @@ export default function Sequencer() {
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="mt-6 space-y-2 overflow-x-auto">
+      {/* Grid — alle 16 stappen passen altijd binnen de breedte (geen scrollbalk) */}
+      <div className="mt-6 space-y-1.5">
         {tracks.map((t, ti) => (
-          <div key={t.id} className="flex items-center gap-3">
+          <div key={t.id} className="flex items-center gap-2 sm:gap-3">
             <span
-              className="w-16 shrink-0 text-xs font-bold uppercase tracking-widest"
+              className="w-12 shrink-0 text-[10px] font-bold uppercase tracking-widest sm:w-16 sm:text-xs"
               style={{ color: t.color }}
             >
               {t.label}
             </span>
-            <div className="flex gap-1.5">
+            <div
+              className="grid flex-1 gap-1 sm:gap-1.5"
+              style={{ gridTemplateColumns: "repeat(16, minmax(0, 1fr))" }}
+            >
               {Array.from({ length: STEPS }).map((_, si) => {
                 const on = grid[ti][si];
                 const isBeat = si % 4 === 0;
@@ -206,17 +209,16 @@ export default function Sequencer() {
                     onClick={() => toggle(ti, si)}
                     aria-label={`${t.label} stap ${si + 1}`}
                     aria-pressed={on}
-                    className={`h-9 w-9 shrink-0 rounded-md transition-all duration-75 ${
-                      isBeat ? "ring-1 ring-border" : ""
-                    } ${playhead ? "scale-110" : ""}`}
+                    className="aspect-square w-full rounded-[5px] transition-colors duration-75 sm:rounded-md"
                     style={{
                       background: on ? t.color : isBeat ? "var(--surface-2)" : "rgba(0,0,0,0.05)",
                       boxShadow: playhead
-                        ? `0 0 0 2px var(--foreground)`
+                        ? "inset 0 0 0 2px var(--foreground)"
                         : on
-                        ? `0 0 14px ${t.color}88`
+                        ? `0 0 12px ${t.color}88`
+                        : isBeat
+                        ? "inset 0 0 0 1px var(--border)"
                         : "none",
-                      marginLeft: si % 4 === 0 && si !== 0 ? "0.5rem" : undefined,
                     }}
                   />
                 );
