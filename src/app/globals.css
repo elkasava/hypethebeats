@@ -130,6 +130,43 @@ body {
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Studio-fader: horizontale range die geroteerd wordt tot verticale fader */
+.fader {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.fader::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12));
+}
+.fader::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 34px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fafafa, #b9b9b9);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -6px 0 -4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.fader::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.fader::-moz-range-thumb {
+  width: 34px;
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fafafa, #b9b9b9);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
 /* Respecteer gebruikersvoorkeur voor minder beweging (a11y).
    De doorlopende marquees blijven bewust draaien — ze zijn puur decoratief
    en horen bij de merkbeleving; alleen de in-/uit-transities worden beperkt. */
