@@ -35,7 +35,7 @@ export default function Header() {
             scrolled ? "glass shadow-2xl shadow-black/40" : ""
           }`}
         >
-          <a href="#top" className="flex items-center gap-2.5">
+          <a href="/" aria-label="Hype The Beats — naar de homepagina" className="flex items-center gap-2.5">
             <span className="relative h-[2.56rem] w-[179px] sm:h-[3.2rem] sm:w-[218px]">
               <Image
                 src="/logo.png"

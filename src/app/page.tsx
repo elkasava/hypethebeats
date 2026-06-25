@@ -13,7 +13,7 @@ import About from "@/components/About";
 import FAQ from "@/components/FAQ";
 import ContactForm from "@/components/ContactForm";
 import Footer from "@/components/Footer";
-import ParticulierCTA from "@/components/ParticulierCTA";
+import MentorTracks from "@/components/MentorTracks";
 import { faqs } from "@/lib/content";
 
 const siteUrl = "https://www.hypethebeats.nl";
@@ -83,11 +83,11 @@ export default function Home() {
         <VideoBreak />
         <Mentors />
         <About />
+        <MentorTracks />
         <FAQ />
         <ContactForm />
       </main>
       <Footer />
-      <ParticulierCTA />
     </>
   );
 }

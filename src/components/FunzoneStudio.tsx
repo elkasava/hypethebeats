@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { playDrum, playNote, type DrumType, type Wave } from "@/lib/funzoneAudio";
+import {
+  playDrum,
+  playNote,
+  setKit,
+  setMasterVolume,
+  setMuted,
+  type DrumType,
+  type Kit,
+  type Wave,
+} from "@/lib/funzoneAudio";
 import Sequencer from "./Sequencer";
 
 type Pad = { id: string; label: string; key: string; color: string; type: DrumType };
@@ -13,7 +22,6 @@ const pads: Pad[] = [
   { id: "clap", label: "Clap", key: "v", color: "#ff7a1a", type: "clap" },
 ];
 
-// Eén octaaf, gekoppeld aan de toetsen a s d f g h j k
 const keys = [
   { id: "c1", label: "C", note: "a", freq: 261.63 },
   { id: "d1", label: "D", note: "s", freq: 293.66 },
@@ -32,9 +40,22 @@ const waves: { id: Wave; label: string }[] = [
   { id: "square", label: "Retro" },
 ];
 
+const genres: { id: Kit; label: string }[] = [
+  { id: "pop", label: "Pop" },
+  { id: "dancehall", label: "Dancehall" },
+];
+
 export default function FunzoneStudio() {
   const [active, setActive] = useState<Set<string>>(new Set());
   const [wave, setWave] = useState<Wave>("triangle");
+  const [genre, setGenre] = useState<Kit>("pop");
+  const [volume, setVolume] = useState(0.8);
+  const [mute, setMute] = useState(false);
+
+  // Houd de audio-engine in sync met de UI
+  useEffect(() => setKit(genre), [genre]);
+  useEffect(() => setMasterVolume(volume), [volume]);
+  useEffect(() => setMuted(mute), [mute]);
 
   const flash = useCallback((id: string) => {
     setActive((prev) => new Set(prev).add(id));
@@ -47,7 +68,6 @@ export default function FunzoneStudio() {
     }, 130);
   }, []);
 
-  // Toetsenbordbediening voor pads + piano
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat) return;
@@ -70,9 +90,56 @@ export default function FunzoneStudio() {
   }, [flash, wave]);
 
   return (
-    <div className="mt-14 space-y-16">
-      {/* Sequencer / mini-DAW */}
-      <Sequencer />
+    <div className="mt-12 space-y-12">
+      {/* Controlebalk: stijl + mute + volume */}
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-border bg-surface px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold uppercase tracking-widest text-muted">Stijl</span>
+          <div className="flex gap-1 rounded-xl bg-surface-2 p-1">
+            {genres.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => setGenre(g.id)}
+                aria-pressed={genre === g.id}
+                className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                  genre === g.id ? "bg-accent text-[#111110]" : "text-muted hover:text-foreground"
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMute((m) => !m)}
+            aria-label={mute ? "Geluid aan" : "Dempen"}
+            aria-pressed={mute}
+            className={`flex h-10 w-10 items-center justify-center rounded-lg border text-lg transition-colors ${
+              mute ? "border-transparent bg-foreground text-background" : "border-border text-foreground hover:bg-black/5"
+            }`}
+          >
+            {mute ? "🔇" : "🔊"}
+          </button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={mute ? 0 : volume}
+            onChange={(e) => {
+              setVolume(Number(e.target.value));
+              if (mute) setMute(false);
+            }}
+            aria-label="Volume"
+            className="h-1.5 w-40 cursor-pointer appearance-none rounded-full bg-surface-2 accent-accent"
+          />
+        </div>
+      </div>
+
+      {/* Beatmaker */}
+      <Sequencer genre={genre} />
 
       {/* Drumpads */}
       <div>
@@ -114,7 +181,7 @@ export default function FunzoneStudio() {
         </div>
       </div>
 
-      {/* Synth / piano */}
+      {/* Synth */}
       <div>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -125,16 +192,13 @@ export default function FunzoneStudio() {
               <kbd className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">K</kbd>
             </p>
           </div>
-          {/* Golfvorm-kiezer */}
           <div className="flex gap-1.5 rounded-xl border border-border bg-surface p-1.5">
             {waves.map((w) => (
               <button
                 key={w.id}
                 onClick={() => setWave(w.id)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-                  wave === w.id
-                    ? "bg-accent text-[#111110]"
-                    : "text-muted hover:text-foreground"
+                  wave === w.id ? "bg-accent text-[#111110]" : "text-muted hover:text-foreground"
                 }`}
               >
                 {w.label}
