@@ -217,6 +217,7 @@ export default function LoopMixer() {
   const sendRef = useRef<GainNode[]>([]);
   const analyserRef = useRef<AnalyserNode[]>([]);
   const masterAnalyserRef = useRef<AnalyserNode | null>(null);
+  const mixBusRef = useRef<GainNode | null>(null);
 
   const meterEls = useRef<(HTMLDivElement | null)[]>([]);
   const clipEls = useRef<(HTMLDivElement | null)[]>([]);
@@ -253,11 +254,18 @@ export default function LoopMixer() {
       const d = ir.getChannelData(ch);
       for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 2.5);
     }
+    // Mix-bus: alle kanalen + reverb lopen hier doorheen, zodat we bij Stop
+    // de hele mix in enkele ms kunnen uitfaden (staart afkappen).
+    const mixBus = ctx.createGain();
+    mixBus.gain.value = 1;
+    mixBus.connect(master);
+    mixBusRef.current = mixBus;
+
     const convolver = ctx.createConvolver();
     convolver.buffer = ir;
     const reverbReturn = ctx.createGain();
     reverbReturn.gain.value = 0.9;
-    convolver.connect(reverbReturn).connect(master);
+    convolver.connect(reverbReturn).connect(mixBus);
 
     tracks.forEach((_, i) => {
       const low = ctx.createBiquadFilter(); low.type = "lowshelf"; low.frequency.value = 250;
@@ -269,7 +277,7 @@ export default function LoopMixer() {
       const s = ctx.createGain(); s.gain.value = send[i] * 0.6;
       g.gain.value = mute[i] ? 0 : volume[i];
 
-      low.connect(mid).connect(high).connect(panner).connect(g).connect(a).connect(master);
+      low.connect(mid).connect(high).connect(panner).connect(g).connect(a).connect(mixBus);
       g.connect(s).connect(convolver);
 
       inRef.current[i] = low; midRef.current[i] = mid; highRef.current[i] = high;
@@ -277,7 +285,7 @@ export default function LoopMixer() {
     });
 
     const ma = ctx.createAnalyser(); ma.fftSize = 256;
-    master.connect(ma);
+    mixBus.connect(ma);
     masterAnalyserRef.current = ma;
 
     return () => {
@@ -285,6 +293,7 @@ export default function LoopMixer() {
       analyserRef.current.forEach((a) => a?.disconnect());
       sendRef.current.forEach((s) => s?.disconnect());
       convolver.disconnect();
+      mixBus.disconnect();
       masterAnalyserRef.current?.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -368,11 +377,29 @@ export default function LoopMixer() {
     queueRef.current = [];
     shownRef.current = -1;
     setCurrentStep(-1);
+    // Kap de naklinkende staart (pads, reverb) direct af
+    const ctx = getCtx();
+    const mb = mixBusRef.current;
+    if (ctx && mb) {
+      const now = ctx.currentTime;
+      mb.gain.cancelScheduledValues(now);
+      mb.gain.setValueAtTime(mb.gain.value, now);
+      mb.gain.linearRampToValueAtTime(0, now + 0.04);
+    }
+    // Meters leegmaken
+    smoothRef.current.fill(0);
+    meterEls.current.forEach((el) => el && (el.style.height = "100%"));
+    if (masterMeterEl.current) masterMeterEl.current.style.height = "100%";
   }, []);
 
   const start = useCallback(() => {
     const ctx = getCtx();
     if (!ctx) return;
+    const mb = mixBusRef.current;
+    if (mb) {
+      mb.gain.cancelScheduledValues(ctx.currentTime);
+      mb.gain.setValueAtTime(1, ctx.currentTime);
+    }
     setPlaying(true);
     stepRef.current = 0;
     nextNoteTimeRef.current = ctx.currentTime + 0.08;
