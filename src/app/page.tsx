@@ -4,7 +4,7 @@ import Ticker from "@/components/Ticker";
 import Highlights from "@/components/Highlights";
 import Partners from "@/components/Partners";
 import Offerings from "@/components/Offerings";
-import Programs from "@/components/Programs";
+import FunzoneTeaser from "@/components/FunzoneTeaser";
 import Mentors from "@/components/Mentors";
 import VideoBreak from "@/components/VideoBreak";
 import ImpactStats from "@/components/ImpactStats";
@@ -75,9 +75,9 @@ export default function Home() {
           <Ticker />
         </div>
         <Offerings />
+        <FunzoneTeaser />
         <Partners />
         <Highlights />
-        <Programs />
         <ImpactStats />
         <Testimonials />
         <VideoBreak />

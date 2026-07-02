@@ -1,7 +1,13 @@
+"use client";
+
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { mentors } from "@/lib/content";
 import Reveal from "./Reveal";
-import AnimatedHeading from "./AnimatedHeading";
+
+const tracks = mentors.flatMap((m) =>
+  m.tracks.map((t) => ({ mentor: m.name, photo: m.photo, role: m.role, ...t }))
+);
 
 export default function MentorTracks() {
   return (
@@ -14,10 +20,15 @@ export default function MentorTracks() {
                 Uit de praktijk
               </p>
             </Reveal>
-            <AnimatedHeading
-              text="Songs waar onze mentoren aan werkten"
+            <motion.h2
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
               className="mt-4 font-display text-balance text-4xl font-black leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl"
-            />
+            >
+              Songs waar onze <span className="gradient-text">mentoren</span> aan werkten
+            </motion.h2>
           </div>
           <Reveal delay={0.16}>
             <p className="max-w-sm text-base leading-relaxed text-muted lg:text-right">
@@ -28,26 +39,26 @@ export default function MentorTracks() {
         </div>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {mentors.map((m, i) => (
-            <Reveal key={m.name} delay={i * 0.06}>
+          {tracks.map((t, i) => (
+            <Reveal key={t.url} delay={i * 0.06}>
               <a
-                href={`https://open.spotify.com/search/${encodeURIComponent(m.name)}`}
+                href={t.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 transition-all duration-300 hover:border-accent/40 hover:shadow-[0_0_40px_rgba(99,91,255,0.12)]"
               >
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-2">
                   <Image
-                    src={m.photo}
-                    alt={m.name}
+                    src={t.photo}
+                    alt={t.mentor}
                     fill
                     sizes="64px"
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-lg font-bold tracking-tight">{m.name}</h3>
-                  <p className="truncate text-xs uppercase tracking-widest text-muted">{m.role}</p>
+                  <h3 className="truncate font-display text-lg font-bold tracking-tight">{t.title}</h3>
+                  <p className="truncate text-xs uppercase tracking-widest text-muted">{t.mentor}</p>
                 </div>
                 <span
                   aria-hidden="true"
@@ -61,7 +72,7 @@ export default function MentorTracks() {
         </div>
 
         <p className="mt-6 text-xs text-muted">
-          Beluister opent de artiest op Spotify in een nieuw tabblad.
+          Beluister opent de track op Spotify in een nieuw tabblad.
         </p>
       </div>
     </section>

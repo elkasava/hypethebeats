@@ -10,13 +10,19 @@ import {
   type Kit,
 } from "@/lib/funzoneAudio";
 
-type Track = { id: string; label: string; color: string; type: DrumType };
+type Track = { id: string; label: string; color: string; type: DrumType; icon: string };
 
 const tracks: Track[] = [
-  { id: "kick", label: "Kick", color: "#84cc16", type: "kick" },
-  { id: "snare", label: "Snare", color: "#2563eb", type: "snare" },
-  { id: "hihat", label: "Hi-hat", color: "#ff5da2", type: "hihat" },
-  { id: "clap", label: "Clap", color: "#ff7a1a", type: "clap" },
+  { id: "kick", label: "Kick", color: "#84cc16", type: "kick", icon: "🦶" },
+  { id: "snare", label: "Snare", color: "#2563eb", type: "snare", icon: "🥁" },
+  { id: "hihat", label: "Hi-hat", color: "#ff5da2", type: "hihat", icon: "🔔" },
+  { id: "clap", label: "Clap", color: "#ff7a1a", type: "clap", icon: "👏" },
+  { id: "rim", label: "Rim", color: "#facc15", type: "rim", icon: "🪵" },
+  { id: "bongo", label: "Bongo", color: "#22c55e", type: "bongo", icon: "🪘" },
+  { id: "clave", label: "Clave", color: "#f97316", type: "clave", icon: "🥢" },
+  { id: "conga", label: "Conga", color: "#a855f7", type: "conga", icon: "🛢️" },
+  { id: "cowbell", label: "Cowbell", color: "#eab308", type: "cowbell", icon: "🔔" },
+  { id: "guiro", label: "Guiro", color: "#14b8a6", type: "guiro", icon: "🫘" },
 ];
 
 const STEPS = 16;
@@ -26,35 +32,90 @@ const empty = (): Grid => tracks.map(() => Array(STEPS).fill(false));
 
 const b = (s: string): boolean[] => s.split("").map((c) => c === "1");
 
-// Genre-typische startpatronen
+// Genre-typische startpatronen — gebaseerd op de herkenbare signatuurritmes per stijl
 const genrePatterns: Record<Kit, Grid> = {
   pop: [
-    b("1000100010001000"), // kick — four on the floor
-    b("0000100000001000"), // snare — backbeat
-    b("0010001000100010"), // hihat — offbeat
-    b("0000000000000000"), // clap
+    b("1000000010100000"), // kick — 1, en de pickup voor de 4 ("3 en")
+    b("0000100000001000"), // snare — backbeat op 2 & 4
+    b("1010101010101010"), // hihat — strakke 8ths
+    b("0000100000001000"), // clap — dubbelt de snare voor extra punch
+    b("0000000000000000"), // rim
+    b("0000000000000000"), // bongo
+    b("0000000000000000"), // clave
+    b("0000000000000000"), // conga
+    b("0000000000000000"), // cowbell
+    b("0000000000000000"), // guiro
   ],
   dancehall: [
-    b("1000001010000010"), // kick — syncopated boom
-    b("0000000010000000"), // snare — on the 3
-    b("1010101010101010"), // hihat — driving 8ths
-    b("0000100000001000"), // clap — backbeat
+    b("1000001000100000"), // kick — riddim-syncopatie (1, "2 en", 3)
+    b("0000000010000010"), // snare/clap — hard op de 3, ghost erna
+    b("1010101010101010"), // hihat — drijvende 8ths
+    b("0000000000000000"), // clap
+    b("0001000000000000"), // rim — extra syncopatie
+    b("0000000000000000"), // bongo
+    b("0000000000000000"), // clave
+    b("0000000000000000"), // conga
+    b("0000000000000000"), // cowbell
+    b("0000000000000000"), // guiro
   ],
   house: [
     b("1000100010001000"), // kick — four on the floor
     b("0000000000000000"), // snare
-    b("0010001000100010"), // hihat — offbeat
-    b("0000100000001000"), // clap — backbeat
+    b("0010001000100010"), // hihat — offbeat (open hat)
+    b("0000100000001000"), // clap — backbeat op 2 & 4
+    b("0000000000000000"), // rim
+    b("0000000000000000"), // bongo
+    b("0000000000000000"), // clave
+    b("0000000000000000"), // conga
+    b("0000000000000000"), // cowbell
+    b("0000000000000000"), // guiro
   ],
   boombap: [
-    b("1000000000100000"), // kick — laid back
-    b("0000100000001000"), // snare — backbeat
-    b("1010101010101010"), // hihat — 8ths (zet swing erbij!)
+    b("1000000000100000"), // kick — laid back, voor de 3
+    b("0000100000001000"), // snare — backbeat op 2 & 4
+    b("1010101010101010"), // hihat — swung 8ths (zet swing erbij!)
     b("0000000000000000"), // clap
+    b("0000000000000010"), // rim — ghost-accent vlak voor de volgende maat
+    b("0000000000000000"), // bongo
+    b("0000000000000000"), // clave
+    b("0000000000000000"), // conga
+    b("0000000000000000"), // cowbell
+    b("0000000000000000"), // guiro
+  ],
+  reggae: [
+    b("0000000010000000"), // kick — one-drop: niets op 1, hard op de 3
+    b("0000000010000000"), // snare — samen met de kick (de "drop")
+    b("0010001000100010"), // hihat — skank op de offbeats
+    b("0000000000000000"), // clap
+    b("0000000000000010"), // rim — lead-in "chick" vlak voor de 1
+    b("0000000000000000"), // bongo
+    b("0000000000000000"), // clave
+    b("0000000000000000"), // conga
+    b("0000000000000000"), // cowbell
+    b("0000000000000000"), // guiro
+  ],
+  salsa: [
+    b("1000000010000000"), // kick — licht, houdt de tel
+    b("0000000000000000"), // snare
+    b("0000000000000000"), // hihat
+    b("0000000000000000"), // clap
+    b("0000000000000000"), // rim
+    b("0010101000101010"), // bongo — martillo
+    b("1001001000101000"), // clave — son clave (2-3)
+    b("0000001000010100"), // conga — tumbao (open tonen op "2en" & 4, slap op "4en")
+    b("1010101010101010"), // cowbell — mambo bell
+    b("0010001000100010"), // guiro — scrape op de offbeats
   ],
 };
 
-const tempoFor: Record<Kit, number> = { pop: 116, dancehall: 100, house: 124, boombap: 90 };
+const tempoFor: Record<Kit, number> = {
+  pop: 116,
+  dancehall: 100,
+  house: 124,
+  boombap: 90,
+  reggae: 76,
+  salsa: 96,
+};
 
 export default function Sequencer({ genre }: { genre: Kit }) {
   const [bpm, setBpm] = useState(tempoFor[genre]);
@@ -64,10 +125,15 @@ export default function Sequencer({ genre }: { genre: Kit }) {
   const [playing, setPlaying] = useState(false);
   const [grid, setGrid] = useState<Grid>(() => genrePatterns[genre].map((r) => r.slice()));
   const [currentStep, setCurrentStep] = useState(-1);
+  // Per geluid instelbare creative delay & reverb — 0 = droog, 1 = vol effect
+  const [trackFx, setTrackFx] = useState<{ delay: number; reverb: number }[]>(() =>
+    tracks.map(() => ({ delay: 0, reverb: 0 }))
+  );
 
   const gridRef = useRef(grid);
   const bpmRef = useRef(bpm);
   const swingRef = useRef(swing);
+  const trackFxRef = useRef(trackFx);
   const nextNoteTimeRef = useRef(0);
   const stepRef = useRef(0);
   const timerRef = useRef<number | null>(null);
@@ -78,6 +144,9 @@ export default function Sequencer({ genre }: { genre: Kit }) {
   useEffect(() => {
     gridRef.current = grid;
   }, [grid]);
+  useEffect(() => {
+    trackFxRef.current = trackFx;
+  }, [trackFx]);
   useEffect(() => {
     bpmRef.current = bpm;
   }, [bpm]);
@@ -106,7 +175,7 @@ export default function Sequencer({ genre }: { genre: Kit }) {
       const playTime = time + (swung ? swingRef.current * secondsPer16th * 2 : 0);
       const g = gridRef.current;
       tracks.forEach((t, i) => {
-        if (g[i][step]) playDrum(t.type, playTime);
+        if (g[i][step]) playDrum(t.type, playTime, undefined, trackFxRef.current[i]);
       });
       queueRef.current.push({ step, time: playTime });
       nextNoteTimeRef.current += secondsPer16th;
@@ -157,6 +226,14 @@ export default function Sequencer({ genre }: { genre: Kit }) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
+
+  const updateFx = (track: number, key: "delay" | "reverb", value: number) => {
+    setTrackFx((prev) => {
+      const next = prev.map((f) => ({ ...f }));
+      next[track] = { ...next[track], [key]: value };
+      return next;
+    });
+  };
 
   const toggle = (track: number, step: number) => {
     setGrid((prev) => {
@@ -257,13 +334,16 @@ export default function Sequencer({ genre }: { genre: Kit }) {
       </div>
 
       {/* Grid */}
-      <div className="mt-6 space-y-1.5">
+      <div className="mt-6 space-y-2.5">
         {tracks.map((t, ti) => (
           <div key={t.id} className="flex items-center gap-2 sm:gap-3">
             <span
-              className="w-12 shrink-0 text-[10px] font-bold uppercase tracking-widest sm:w-16 sm:text-xs"
+              className="flex w-14 shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-widest sm:w-20 sm:text-xs"
               style={{ color: t.color }}
             >
+              <span aria-hidden className="text-sm sm:text-base">
+                {t.icon}
+              </span>
               {t.label}
             </span>
             <div
@@ -293,9 +373,42 @@ export default function Sequencer({ genre }: { genre: Kit }) {
                 );
               })}
             </div>
+
+            {/* Creative delay & reverb — per geluid aan/uit op 10% */}
+            <div className="hidden shrink-0 items-center gap-1.5 pl-1 sm:flex">
+              <button
+                type="button"
+                onClick={() => updateFx(ti, "delay", trackFx[ti].delay > 0 ? 0 : 0.1)}
+                aria-pressed={trackFx[ti].delay > 0}
+                title="Delay 10%"
+                className={`rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-widest transition-colors ${
+                  trackFx[ti].delay > 0
+                    ? "border-accent bg-accent text-[#111110]"
+                    : "border-white/15 text-white/35 hover:text-white/60"
+                }`}
+              >
+                Dly
+              </button>
+              <button
+                type="button"
+                onClick={() => updateFx(ti, "reverb", trackFx[ti].reverb > 0 ? 0 : 0.1)}
+                aria-pressed={trackFx[ti].reverb > 0}
+                title="Reverb 10%"
+                className={`rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-widest transition-colors ${
+                  trackFx[ti].reverb > 0
+                    ? "border-accent bg-accent text-[#111110]"
+                    : "border-white/15 text-white/35 hover:text-white/60"
+                }`}
+              >
+                Rvb
+              </button>
+            </div>
           </div>
         ))}
       </div>
+      <p className="mt-4 text-xs text-white/45 sm:hidden">
+        Draai het scherm of gebruik een groter venster om per geluid delay en reverb te regelen.
+      </p>
     </div>
   );
 }

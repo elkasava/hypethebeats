@@ -88,6 +88,7 @@ export const mentors = [
     photo: "/mentors/henkiet.jpg",
     contribution:
       "Brengt podiumervaring en straattaal naar de workshops — laat deelnemers voelen hoe het is om écht op te treden en hun eigen verhaal te vertellen.",
+    tracks: [{ title: "Oui", url: "https://open.spotify.com/track/0DsjGIyxTDSgdfwvqVfnKu" }],
   },
   {
     name: "Latifah",
@@ -95,6 +96,7 @@ export const mentors = [
     photo: "/mentors/latifah.jpg",
     contribution:
       "Inspireert deelnemers met haar stem en verhaal — en laat zien hoe je emotie omzet in muziek.",
+    tracks: [{ title: "Pikin Fu Sranan", url: "https://open.spotify.com/track/5mMXLmYJ2ae7ifbAQiSRjs" }],
   },
   {
     name: "Karl Wine",
@@ -102,6 +104,7 @@ export const mentors = [
     photo: "/mentors/karlwine.jpeg",
     contribution:
       "Deelt zijn ervaring uit de muziekindustrie en inspireert deelnemers om hun eigen stijl en identiteit te ontwikkelen.",
+    tracks: [{ title: "Dansen", url: "https://open.spotify.com/track/5NetJsSRwKFJQU1shH7Q8K" }],
   },
   {
     name: "Le Prince",
@@ -109,6 +112,7 @@ export const mentors = [
     photo: "/mentors/leprince.jpg",
     contribution:
       "Brengt rauwe podiumenergie en flow naar de sessies — leert deelnemers presteren en zichzelf laten horen op het podium.",
+    tracks: [{ title: "Amiri", url: "https://open.spotify.com/track/5dW847B7kAUEF2ypc5BqgA" }],
   },
   {
     name: "Defano Holwijn",
@@ -116,6 +120,10 @@ export const mentors = [
     photo: "/mentors/defanoholwijn.jpg",
     contribution:
       "Motiveert deelnemers met zijn energie en verhaal — laat zien hoe je van een idee naar een echt podiummoment komt.",
+    tracks: [
+      { title: "Dansen", url: "https://open.spotify.com/track/3bsOOPEzZ67Ij7bl3TrHv7" },
+      { title: "Mi Rowsu (Tuintje In Mijn Hart)", url: "https://open.spotify.com/track/1D6GCvw4E7fzqmFA8m4EFR" },
+    ],
   },
 ];
 

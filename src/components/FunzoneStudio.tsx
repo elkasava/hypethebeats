@@ -5,13 +5,13 @@ import { playDrum, playNote, setKit, type DrumType, type Kit, type Wave } from "
 import Sequencer from "./Sequencer";
 import LoopMixer from "./LoopMixer";
 
-type Pad = { id: string; label: string; key: string; color: string; type: DrumType };
+type Pad = { id: string; label: string; key: string; color: string; type: DrumType; icon: string };
 
 const pads: Pad[] = [
-  { id: "kick", label: "Kick", key: "z", color: "#84cc16", type: "kick" },
-  { id: "snare", label: "Snare", key: "x", color: "#2563eb", type: "snare" },
-  { id: "hihat", label: "Hi-hat", key: "c", color: "#ff5da2", type: "hihat" },
-  { id: "clap", label: "Clap", key: "v", color: "#ff7a1a", type: "clap" },
+  { id: "kick", label: "Kick", key: "z", color: "#84cc16", type: "kick", icon: "🦶" },
+  { id: "snare", label: "Snare", key: "x", color: "#2563eb", type: "snare", icon: "🥁" },
+  { id: "hihat", label: "Hi-hat", key: "c", color: "#ff5da2", type: "hihat", icon: "🔔" },
+  { id: "clap", label: "Clap", key: "v", color: "#ff7a1a", type: "clap", icon: "👏" },
 ];
 
 const keys = [
@@ -23,6 +23,16 @@ const keys = [
   { id: "a1", label: "A", note: "h", freq: 440.0 },
   { id: "b1", label: "B", note: "j", freq: 493.88 },
   { id: "c2", label: "C", note: "k", freq: 523.25 },
+];
+
+// Zwarte toetsen — afterIndex geeft aan na welke witte toets (0-based) hij hangt,
+// net als op een echte piano (geen zwarte toets tussen E-F en B-C).
+const blackKeys = [
+  { id: "cs1", label: "C#", note: "w", freq: 277.18, afterIndex: 0 },
+  { id: "ds1", label: "D#", note: "e", freq: 311.13, afterIndex: 1 },
+  { id: "fs1", label: "F#", note: "t", freq: 369.99, afterIndex: 3 },
+  { id: "gs1", label: "G#", note: "y", freq: 415.3, afterIndex: 4 },
+  { id: "as1", label: "A#", note: "u", freq: 466.16, afterIndex: 5 },
 ];
 
 const waves: { id: Wave; label: string }[] = [
@@ -37,6 +47,8 @@ const genres: { id: Kit; label: string }[] = [
   { id: "dancehall", label: "Dancehall" },
   { id: "house", label: "House" },
   { id: "boombap", label: "Boom-bap" },
+  { id: "reggae", label: "Reggae" },
+  { id: "salsa", label: "Salsa" },
 ];
 
 export default function FunzoneStudio() {
@@ -65,7 +77,7 @@ export default function FunzoneStudio() {
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
       const k = e.key.toLowerCase();
       const pad = pads.find((p) => p.key === k);
-      const pianoKey = keys.find((n) => n.note === k);
+      const pianoKey = keys.find((n) => n.note === k) ?? blackKeys.find((n) => n.note === k);
       if (pad) {
         playDrum(pad.type);
         flash(pad.id);
@@ -133,7 +145,10 @@ export default function FunzoneStudio() {
                     : "0 8px 24px rgba(0,0,0,0.15)",
                 }}
               >
-                <span className="font-display text-3xl font-black">{pad.label}</span>
+                <span aria-hidden className="text-3xl">
+                  {pad.icon}
+                </span>
+                <span className="mt-1 font-display text-2xl font-black">{pad.label}</span>
                 <span className="mt-1 text-xs font-bold uppercase tracking-widest opacity-70">
                   {pad.key}
                 </span>
@@ -170,27 +185,49 @@ export default function FunzoneStudio() {
         </div>
 
         <div className="mt-5 flex gap-1.5 overflow-x-auto pb-2">
-          {keys.map((n) => {
+          {keys.map((n, i) => {
             const on = active.has(n.id);
+            const blackKey = blackKeys.find((bk) => bk.afterIndex === i);
+            const blackOn = blackKey ? active.has(blackKey.id) : false;
             return (
-              <button
-                key={n.id}
-                onPointerDown={() => {
-                  playNote(n.freq, wave);
-                  flash(n.id);
-                }}
-                aria-label={`Noot ${n.label}`}
-                className="flex h-44 min-w-[3rem] flex-1 select-none flex-col items-center justify-end rounded-b-xl border border-border pb-4 transition-all duration-100"
-                style={{
-                  background: on ? "var(--accent)" : "var(--surface)",
-                  transform: on ? "translateY(3px)" : "translateY(0)",
-                }}
-              >
-                <span className="font-display text-lg font-bold text-foreground">{n.label}</span>
-                <span className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted">
-                  {n.note}
-                </span>
-              </button>
+              <div key={n.id} className="relative min-w-[3rem] flex-1">
+                <button
+                  onPointerDown={() => {
+                    playNote(n.freq, wave);
+                    flash(n.id);
+                  }}
+                  aria-label={`Noot ${n.label}`}
+                  className="flex h-44 w-full select-none flex-col items-center justify-end rounded-b-xl border border-border pb-4 transition-all duration-100"
+                  style={{
+                    background: on ? "var(--accent)" : "var(--surface)",
+                    transform: on ? "translateY(3px)" : "translateY(0)",
+                  }}
+                >
+                  <span className="font-display text-lg font-bold text-foreground">{n.label}</span>
+                  <span className="mt-1 text-[10px] font-bold uppercase tracking-widest text-muted">
+                    {n.note}
+                  </span>
+                </button>
+
+                {blackKey && (
+                  <button
+                    onPointerDown={() => {
+                      playNote(blackKey.freq, wave);
+                      flash(blackKey.id);
+                    }}
+                    aria-label={`Noot ${blackKey.label}`}
+                    className="absolute right-0 top-0 z-10 flex h-28 w-7 -translate-x-1/2 select-none flex-col items-center justify-end rounded-b-md pb-2 shadow-lg transition-all duration-100 sm:w-8"
+                    style={{
+                      background: blackOn ? "var(--accent)" : "#111110",
+                      transform: blackOn ? "translateX(-50%) translateY(2px)" : "translateX(-50%)",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/80">
+                      {blackKey.note}
+                    </span>
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

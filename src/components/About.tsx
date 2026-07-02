@@ -57,6 +57,7 @@ export default function About() {
             </Reveal>
             <AnimatedHeading
               text="Een team dat gelooft in de kracht van samen muziek maken"
+              highlight="kracht"
               className="mt-4 font-display text-balance text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl"
             />
             <Reveal delay={0.16}>

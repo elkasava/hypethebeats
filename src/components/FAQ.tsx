@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { faqs } from "@/lib/content";
 import Reveal from "./Reveal";
-import AnimatedHeading from "./AnimatedHeading";
 import Sticker from "./Sticker";
 
 export default function FAQ() {
@@ -23,10 +22,15 @@ export default function FAQ() {
                 Veelgestelde vragen
               </p>
             </Reveal>
-            <AnimatedHeading
-              text="Alles wat u wilt weten voordat u start"
+            <motion.h2
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
               className="mt-4 font-display text-balance text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl"
-            />
+            >
+              Alles wat u wilt <span className="gradient-text">weten</span> voordat u start
+            </motion.h2>
           </div>
           <Reveal delay={0.16}>
             <a

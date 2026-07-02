@@ -36,6 +36,7 @@ export default function Mentors() {
         <div className="mt-14">
           <AnimatedHeading
             text="De mensen die onze workshops bijzonder maken"
+            highlight="bijzonder"
             className="font-display text-balance text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl"
           />
           <Reveal delay={0.16}>

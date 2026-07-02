@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { offerings } from "@/lib/content";
+import { offerings, programs } from "@/lib/content";
 import Reveal from "./Reveal";
 import AnimatedHeading from "./AnimatedHeading";
 import Sticker from "./Sticker";
@@ -9,6 +9,16 @@ const palette = [
   { bg: "#84cc16", fg: "#111110" }, // lime
   { bg: "#2563eb", fg: "#ffffff" }, // blauw
   { bg: "#ff5da2", fg: "#111110" }, // roze
+  { bg: "#111110", fg: "#ffffff" }, // zwart
+];
+
+// Trajecten-kaarten — iets gedimd t.o.v. de hoofdpalette zodat ze als subsectie voelen
+const trajectPalette = [
+  { bg: "#84cc16", fg: "#111110" }, // lime
+  { bg: "#2563eb", fg: "#ffffff" }, // blauw
+  { bg: "#ff5da2", fg: "#111110" }, // roze
+  { bg: "#7c3aed", fg: "#ffffff" }, // paars
+  { bg: "#ff7a1a", fg: "#111110" }, // oranje
   { bg: "#111110", fg: "#ffffff" }, // zwart
 ];
 
@@ -28,6 +38,7 @@ export default function Offerings() {
             </Reveal>
             <AnimatedHeading
               text="Programma's op maat voor elke doelgroep"
+              highlight="maat"
               className="mt-4 font-display text-balance text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl"
             />
           </div>
@@ -94,6 +105,54 @@ export default function Offerings() {
             </Reveal>
             );
           })}
+        </div>
+
+        <div className="mt-20">
+          <Reveal>
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-accent-2">
+              Trajecten
+            </p>
+          </Reveal>
+          <AnimatedHeading
+            text="Gerichte begeleiding voor ieder doel"
+            highlight="begeleiding"
+            className="mt-4 font-display text-balance text-4xl font-black leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl"
+          />
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {programs.map((item, i) => {
+              const c = trajectPalette[i % trajectPalette.length];
+              return (
+                <Reveal key={item.title} delay={i * 0.06}>
+                  <article
+                    className="hover-lift flex h-full flex-col rounded-lg p-8"
+                    style={{ background: c.bg, color: c.fg }}
+                  >
+                    <span className="font-display text-6xl font-black leading-none" style={{ opacity: 0.85 }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="mt-4 font-display text-2xl font-bold tracking-tight">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed" style={{ opacity: 0.85 }}>
+                      {item.description}
+                    </p>
+                    <ul className="mt-6 flex flex-wrap gap-2">
+                      {item.tags.map((t) => (
+                        <li
+                          key={t}
+                          className="rounded-md px-3 py-1.5 text-xs"
+                          style={{ border: `1px solid ${c.fg}40`, color: c.fg }}
+                        >
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
